@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <title>Mitt Runner Spel med Jätte-Hinder</title>
+    <title>Frippelito</title>
     <style>
         body {
             margin: 0;
@@ -17,6 +17,11 @@
             background: #87CEEB; /* Himmelsblå bakgrund */
             border: 4px solid #333;
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+
+    /* Förhindrar att användaren kan scrolla eller zooma av misstag under spelets gång */
+    touch-action: none; 
+    overflow: hidden;
+
         }
     </style>
 </head>
@@ -124,33 +129,45 @@ let object2 = {
     isCaught: false        
 };
 
-// Lyssna efter tangenter (spacebar och enter)
-
-window.addEventListener("keydown", function(e) {
-    
-// Om man trycker på Enter -> Hantera start och omstart
-
-    if (e.code === "Enter") {
+// 1. Skapa en gemensam funktion som hanterar vad som ska hända vid tryck
+function handleGameInput(inputSource) {
+    // Hantera START (motsvarar Enter)
+    if (inputSource === "Enter" || inputSource === "Touch") {
         if (!gameActive && !gameOver && !gameWon) {
             gameActive = true; 
             bgMusic.play(); // Startar musiken första gången
+            return; // Avbryt här så vi inte råkar hoppa i samma tryck vid start
         } else if (gameOver || gameWon) {
             restartGame(); 
+            return; // Avbryt här så vi inte hoppar direkt vid omstart
         }
     }
     
-// Om man trycker Spacebar -> Hantera ENBART hopp
-
-    if (e.code === "Space") {
-        
-// Hoppa bara om spelet är aktivt
-
+    // Hantera HOPP (motsvarar Spacebar eller Touch när spelet är igång)
+    if (inputSource === "Space" || inputSource === "Touch") {
         if (gameActive && !gameOver && !gameWon) {
             jump();
         }
     }
+}
+
+// 2. Lyssna efter tangenter (behåller din befintliga logik via funktionen)
+window.addEventListener("keydown", function(e) {
+    if (e.code === "Enter") {
+        handleGameInput("Enter");
+    }
+    if (e.code === "Space") {
+        handleGameInput("Space");
+    }
 });
 
+// 3. Lyssna efter Touch (för smartphone och surfplattor)
+window.addEventListener("touchstart", function(e) {
+    // Förhindrar att skärmen zoomar eller scrollar av misstag när man trycker snabbt
+    e.preventDefault(); 
+    
+    handleGameInput("Touch");
+}, { passive: false });
 function jump() {
     if (player.isGrounded) {
         player.velocityY = player.jumpForce;
